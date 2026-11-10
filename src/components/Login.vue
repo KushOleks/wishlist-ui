@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { apiErrorMessage } from '../api-errors'
 import { ref } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
@@ -52,8 +53,8 @@ async function onSubmit(): Promise<void> {
   try {
     await auth.login(email.value, password.value)
     router.push('/my-wishlists')
-  } catch (e: any) {
-    error.value = e.response?.data?.detail || 'Login failed'
+  } catch (e) {
+    error.value = apiErrorMessage(e, 'Login failed')
   }
 }
 </script>

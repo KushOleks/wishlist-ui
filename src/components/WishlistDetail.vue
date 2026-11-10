@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { apiErrorMessage } from '../api-errors'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api'
@@ -128,6 +129,13 @@ interface Item {
   title: string
   url?: string
   marked: boolean
+}
+
+interface ApiItem {
+  id: number
+  title: string
+  description?: string | null
+  is_marked: boolean
 }
 
 interface Status {
@@ -175,11 +183,11 @@ async function fetchWishlist() {
 
 async function fetchItems() {
   try {
-    const res = await api.get(`/wishlists/${route.params.id}/items`)
-    items.value = res.data.map((i: any) => ({
+    const res = await api.get<ApiItem[]>(`/wishlists/${route.params.id}/items`)
+    items.value = res.data.map((i) => ({
       ...i,
       marked: i.is_marked,
-      url: i.description
+      url: i.description ?? undefined
     }))
   } catch {
     error.value = 'Failed to load items'
@@ -197,8 +205,8 @@ async function addItem() {
     items.value.push(res.data)
     newItem.value.title = ''
     newItem.value.url = ''
-  } catch (e: any) {
-    error.value = e.response?.data?.detail || 'Add item failed'
+  } catch (e) {
+    error.value = apiErrorMessage(e, 'Add item failed')
   }
 }
 async function deleteItem(item: Item) {

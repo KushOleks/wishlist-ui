@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { apiErrorMessage } from '../api-errors'
 import { ref, onMounted, watch } from 'vue'
 import api from '../api'
 import { useRoute } from 'vue-router'
@@ -72,7 +73,7 @@ async function fetchWishlists() {
     }
     const res = await api.get(url)
     wishlists.value = res.data
-  } catch (e) {
+  } catch {
     error.value = 'Failed to load wishlists'
   }
 }
@@ -84,8 +85,8 @@ async function createList(): Promise<void> {
     const res = await api.post('/wishlists', { title: title.value })
     wishlists.value.push(res.data)
     title.value = ''
-  } catch (e: any) {
-    error.value = e.response?.data?.detail || 'Create failed'
+  } catch (e) {
+    error.value = apiErrorMessage(e, 'Create failed')
   }
 }
 
