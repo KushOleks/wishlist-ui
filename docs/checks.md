@@ -27,6 +27,6 @@ Node.js має відповідати .nvmrc. Збірка не потребує
 
 ## Перевірка
 
-Локально lint, typecheck та build пройшли. Результат GitHub Actions і наявність артефакту буде записано після фактичного запуску.
+Локально lint, typecheck та build пройшли. [UI CI у PR №1](https://github.com/KushOleks/wishlist-ui/actions/runs/42913704389) успішний: усі три job зелені. Артефакт wishlist-ui-dist (59556 байт) завантажено та перевірено: містить index.html, assets/*.js і assets/*.css. [Pull Request](https://github.com/KushOleks/wishlist-ui/pull/1).
 
 Тести UI не додано відповідно до умови. Rulesets, демонстрація блокування merge та вимірювання часу кешу належать до завдань №4–5 і тут не виконуються.
