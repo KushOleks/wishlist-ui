@@ -48,7 +48,7 @@ Main публікує main та sha-<повний SHA>, v* — semver теги �
 Публікація multi-arch: linux/amd64 та linux/arm64, GHCR login через GITHUB_TOKEN.
 Trivy — окремий advisory job; він зберігає JSON і підсумок OS/application findings у Summary.
 [Реліз v1.0.0](https://github.com/KushOleks/wishlist-ui/releases/tag/v1.0.0) опубліковано.
-[Публічний пакет GHCR](https://github.com/users/KushOleks/packages/container/wishlist-ui)
+[Публічний пакет GHCR](https://github.com/KushOleks/wishlist-ui/pkgs/container/wishlist-ui)
 має теги main, sha-<коміт>, 1.0.0, 1.0, 1 та latest.
 
 ![GHCR: Public та релізні теги](containers-assets/ghcr-package.png)
