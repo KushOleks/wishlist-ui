@@ -48,3 +48,11 @@ Main публікує main та sha-<повний SHA>, v* — semver теги �
 Публікація multi-arch: linux/amd64 та linux/arm64, GHCR login через GITHUB_TOKEN.
 Trivy — окремий advisory job; він зберігає JSON і підсумок OS/application findings у Summary.
 Доказ публічного пакета, релізу й manifest буде додано після публікації.
+
+## Trivy — контрольний PR-прогін
+
+[UI CI 45494718518](https://github.com/KushOleks/wishlist-ui/actions/runs/45494718518)
+містить артефакт wishlist-ui-trivy. У JSON — 198 записів OS-пакетів і 0 бібліотек застосунку.
+Більшість знахідок походить із базового nginx/Alpine образу. Node-залежності не входять
+до production-образу; відсутність їх у звіті образу не означає відсутності проблем npm,
+для них лишається окремий dependency audit з лабораторної №4.
