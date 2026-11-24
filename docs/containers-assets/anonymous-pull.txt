@@ -1,0 +1,20 @@
+1.0.0: Pulling from kusholeks/wishlist-ui
+c2fe130f4aab: Already exists
+6ad5ac8f8cf5: Already exists
+a71a558a4847: Already exists
+f75955c831fe: Already exists
+a0758cbe9d05: Already exists
+1a330f762070: Already exists
+8cf803132b55: Already exists
+571ef1bf4ef0: Already exists
+74f36ae7f4b8: Pulling fs layer
+0961b4839047: Pulling fs layer
+74f36ae7f4b8: Verifying Checksum
+74f36ae7f4b8: Download complete
+74f36ae7f4b8: Pull complete
+0961b4839047: Verifying Checksum
+0961b4839047: Download complete
+0961b4839047: Pull complete
+Digest: sha256:f10655cff01b446aebac6a2efdd1ab53777ee98f2f884fb2aa893104e0f313c1
+Status: Downloaded newer image for ghcr.io/kusholeks/wishlist-ui:1.0.0
+ghcr.io/kusholeks/wishlist-ui:1.0.0

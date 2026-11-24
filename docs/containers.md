@@ -47,7 +47,21 @@ UI image (Docker) запускається після lint, types і Vite build.
 Main публікує main та sha-<повний SHA>, v* — semver теги й latest.
 Публікація multi-arch: linux/amd64 та linux/arm64, GHCR login через GITHUB_TOKEN.
 Trivy — окремий advisory job; він зберігає JSON і підсумок OS/application findings у Summary.
-Доказ публічного пакета, релізу й manifest буде додано після публікації.
+[Реліз v1.0.0](https://github.com/KushOleks/wishlist-ui/releases/tag/v1.0.0) опубліковано.
+[Публічний пакет GHCR](https://github.com/users/KushOleks/packages/container/wishlist-ui)
+має теги main, sha-<коміт>, 1.0.0, 1.0, 1 та latest.
+
+![GHCR: Public та релізні теги](containers-assets/ghcr-package.png)
+
+[Повний imagetools inspect](containers-assets/release-manifest.txt) підтверджує
+linux/amd64 і linux/arm64 під тегом 1.0.0. `unknown/unknown` записи — attestations,
+а не додаткові архітектури. Digest індексу:
+`sha256:f10655cff01b446aebac6a2efdd1ab53777ee98f2f884fb2aa893104e0f313c1`.
+
+[Лог анонімного docker pull](containers-assets/anonymous-pull.txt): використано
+порожній DOCKER_CONFIG без auth, образ завантажився без docker login.
+[Зелений релізний CI](https://github.com/KushOleks/wishlist-ui/actions/runs/45496937038).
+
 
 ## Trivy — контрольний PR-прогін
 
