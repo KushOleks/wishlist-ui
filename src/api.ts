@@ -1,7 +1,8 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from './store/auth'
 
-const API_BASE = import.meta.env.VITE_API_BASE as string || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE as string
+if (!API_BASE) throw new Error('VITE_API_BASE must be set before building the UI')
 
 const api = axios.create({
   baseURL: API_BASE,

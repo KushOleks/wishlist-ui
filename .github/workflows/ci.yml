@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+    tags: ['v*']
 
 permissions:
   contents: read
@@ -65,3 +66,121 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  container:
+    name: UI image (Docker)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to GHCR only for publication
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate image tags
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ghcr.io/kusholeks/wishlist-ui
+          flavor: latest=false
+          tags: |
+            type=raw,value=pr-${{ github.event.number }},enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=long,prefix=sha-,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Build image; publish only main and release tags
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: production
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_BASE=http://localhost:8000
+          cache-from: type=gha,scope=wishlist-ui
+          cache-to: type=gha,mode=max,scope=wishlist-ui
+      - name: Verify lean PR image and SPA routing
+        if: github.event_name == 'pull_request'
+        env:
+          IMAGE: ghcr.io/kusholeks/wishlist-ui:pr-${{ github.event.number }}
+        run: |
+          docker run --rm "$IMAGE" sh -c '! command -v node && test ! -d /app/node_modules && test ! -e /usr/share/nginx/html/.env'
+          docker run -d --name ui-check -p 127.0.0.1:18080:80 "$IMAGE"
+          trap 'docker rm -f ui-check' EXIT
+          curl --fail --retry 15 --retry-all-errors --retry-delay 1 http://127.0.0.1:18080/health
+          curl --fail http://127.0.0.1:18080/wishlists/1 | grep 'id="app"'
+
+  image_scan:
+    name: UI image scan (Trivy, advisory)
+    needs: container
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Load native image from build cache for scanning
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: production
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: local/wishlist-ui:scan
+          build-args: |
+            VITE_API_BASE=http://localhost:8000
+          cache-from: type=gha,scope=wishlist-ui
+      - name: Scan image without blocking pull requests
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: local/wishlist-ui:scan
+          scan-type: image
+          scanners: vuln
+          format: json
+          output: trivy-report.json
+          exit-code: '0'
+      - name: Summarize finding sources
+        if: always()
+        run: |
+          python3 - <<'PYREPORT'
+          import json
+          import os
+          from pathlib import Path
+          report = Path("trivy-report.json")
+          if not report.exists():
+              message = "Scan did not produce a report; inspect the scanner logs."
+          else:
+              results = json.loads(report.read_text()).get("Results", [])
+              counts = {category: sum(len(r.get("Vulnerabilities", [])) for r in results if r.get("Class") == category) for category in ("os-pkgs", "lang-pkgs")}
+              source = "base OS packages" if counts["os-pkgs"] > counts["lang-pkgs"] else "application dependencies" if counts["lang-pkgs"] > counts["os-pkgs"] else "equal counts in both categories"
+              message = f"Most findings: {source}. OS: {counts['os-pkgs']}; application: {counts['lang-pkgs']}."
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(message + "\n")
+          print(message)
+          PYREPORT
+      - name: Preserve image vulnerability report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wishlist-ui-trivy
+          path: trivy-report.json
+          retention-days: 14
+          if-no-files-found: warn
