@@ -14,8 +14,17 @@ docker image inspect wishlist-ui:build wishlist-ui:lab05-local --format '{{.Repo
 
 ## Розміри
 
-Таблиця фактичних вимірювань буде додана після збірки; розміри ще не виміряні.
-Очікувана причина різниці — Node та node_modules на build-етапі; висновок буде перевірено через du.
+Виміряно на Mac M1, linux/arm64 через docker image inspect (Size, байти):
+
+| Образ | Розмір, байти | MiB |
+|---|---:|---:|
+| build (`--target build`) | 327303019 | 312,14 |
+| production | 49993633 | 47,68 |
+
+Найбільший виміряний каталог build-етапу — `/app/node_modules`: 153,8 MiB;
+`/usr/local` (Node та інструменти) — 147,3 MiB, `dist` — 172 KiB.
+Фінальний образ не має Node та node_modules; перевірка дала `lean-runtime-ok`.
+Вимірювання стосуються локальних arm64 образів, а не стисненого розміру GHCR.
 
 ## Адреса API
 

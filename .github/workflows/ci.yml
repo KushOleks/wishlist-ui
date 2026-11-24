@@ -122,7 +122,7 @@ jobs:
           docker run --rm "$IMAGE" sh -c '! command -v node && test ! -d /app/node_modules && test ! -e /usr/share/nginx/html/.env'
           docker run -d --name ui-check -p 127.0.0.1:18080:80 "$IMAGE"
           trap 'docker rm -f ui-check' EXIT
-          curl --fail --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:18080/health
+          curl --fail --retry 15 --retry-all-errors --retry-delay 1 http://127.0.0.1:18080/health
           curl --fail http://127.0.0.1:18080/wishlists/1 | grep 'id="app"'
 
   image_scan:
